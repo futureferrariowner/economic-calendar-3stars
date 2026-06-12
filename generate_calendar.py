@@ -13,12 +13,11 @@ def main():
     cal = Calendar.from_ical(response.content)
 
     new_cal = Calendar()
-    new_cal.add('prodid', '-//Alexandre Economic 3★ Calendar//')
+    new_cal.add('prodid', '-//Alexandre Economic 3★//')
     new_cal.add('version', '2.0')
     new_cal.add('X-WR-CALNAME', 'Economic 3★ EUR/GBP/USD')
 
     now = datetime.now(pytz.UTC)
-    # On garde seulement les 8 prochains jours
     one_week_later = now + timedelta(days=8)
 
     added = set()
@@ -28,34 +27,34 @@ def main():
         description = str(component.get('DESCRIPTION', ''))
         dtstart = component.get('DTSTART').dt
 
-        # Filtre strict High Impact
+        # Seulement High Impact (3 étoiles)
         if not ('High Impact Expected' in description or '***' in summary):
             continue
 
-        # Nettoyage du titre + ajout de la devise
-        currency = ''
-        if 'USD' in summary or 'United States' in description:
-            currency = 'USD'
-        elif 'EUR' in summary or 'Eurozone' in description or 'ECB' in summary:
-            currency = 'EUR'
-        elif 'GBP' in summary or 'United Kingdom' in description:
-            currency = 'GBP'
+        # Seulement EUR, GBP, USD
+        if not any(x in summary.upper() or x in description.upper() for x in ['USD', 'EUR', 'GBP', 'UNITED STATES', 'EUROZONE', 'UNITED KINGDOM', 'ECB', 'BOE', 'FED']):
+            continue
 
+        # Pas d'événements passés
+        if dtstart < now:
+            continue
+
+        # Nettoyage + devise dans le titre
         clean_summary = re.sub(r'\s*\[.*?\]', '', summary).strip()
-        clean_summary = re.sub(r'^\d+\s*', '', clean_summary)  # retire heure si présente
+        clean_summary = re.sub(r'^\d+\s*', '', clean_summary)
+
+        currency = 'USD' if any(x in summary.upper() or x in description.upper() for x in ['USD', 'UNITED STATES', 'FED']) else \
+                   'EUR' if any(x in summary.upper() or x in description.upper() for x in ['EUR', 'EUROZONE', 'ECB']) else \
+                   'GBP' if any(x in summary.upper() or x in description.upper() for x in ['GBP', 'UNITED KINGDOM', 'BOE']) else ''
 
         event_title = f"{currency} - {clean_summary}" if currency else clean_summary
 
-        # Évite doublons et sous-événements
+        # Évite doublons et sous-versions
         if any(x in clean_summary for x in ['Preliminary', 'Final', 'Revised', 'Flash', 'Actual', 'Previous']):
             continue
         if event_title in added:
             continue
         added.add(event_title)
-
-        # Filtre date : seulement futur + cette semaine
-        if dtstart < now or dtstart > one_week_later:
-            continue
 
         event = Event()
         event.add('SUMMARY', event_title)
@@ -74,7 +73,7 @@ def main():
     with open('public/economic-3stars.ics', 'wb') as f:
         f.write(new_cal.to_ical())
 
-    print(f"✅ {len(added)} événements High Impact générés.")
+    print(f"✅ {len(added)} événements 3★ (EUR/GBP/USD) générés.")
 
 if __name__ == "__main__":
     main()
