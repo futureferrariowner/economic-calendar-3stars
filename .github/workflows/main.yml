@@ -3,23 +3,20 @@ name: Generate Economic Calendar ICS
 on:
   schedule:
     - cron: '0 17 * * 0'     # Dimanche 18h France
-  workflow_dispatch:         # Pour tester manuellement
+  workflow_dispatch:
 
 permissions:
-  contents: write            # ← Important pour push gh-pages
+  contents: write
 
 jobs:
   update-calendar:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
+        uses: actions/checkout@v6
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -35,4 +32,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          force_orphan: true   # ← Aide pour les premiers déploiements
+          force_orphan: true
