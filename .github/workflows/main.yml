@@ -2,8 +2,8 @@ name: Generate Economic Calendar ICS
 
 on:
   schedule:
-    - cron: '0 17 * * 0'     # Dimanche 18h France
-  workflow_dispatch:
+    - cron: '0 * * * *'     # Toutes les heures
+  workflow_dispatch:        # Pour lancer manuellement
 
 permissions:
   contents: write
