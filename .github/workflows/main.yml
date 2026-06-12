@@ -1,0 +1,30 @@
+name: Generate Economic Calendar ICS
+
+on:
+  schedule:
+    - cron: '0 17 * * 0'     # Tous les dimanches à 17h UTC (18h France)
+  workflow_dispatch:         # Permet de lancer manuellement
+
+jobs:
+  update-calendar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests icalendar pytz
+
+      - name: Generate filtered ICS
+        run: python generate_calendar.py
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
